@@ -10,14 +10,15 @@ module LogoSoup
 
       # @param path [String]
       # @param pixel_budget [Integer]
+      # @param on_error [:raise, nil]
       # @return [Hash]
-      def self.call(path:, pixel_budget:)
+      def self.call(path:, pixel_budget:, on_error: nil)
         image = Vips::Image.new_from_file(path, access: :sequential)
         original_width = image.width
         original_height = image.height
 
         sample_width, sample_height, image_small = downsample(image, pixel_budget: pixel_budget)
-        rgba = ensure_rgba_uchar(image_small)
+        rgba = ensure_rgba_uchar(image_small, on_error: on_error)
 
         bytes = rgba.write_to_memory.bytes
         raise 'Empty image bytes' if bytes.empty?
@@ -53,10 +54,12 @@ module LogoSoup
         [sw, sh, small]
       end
 
-      def self.ensure_rgba_uchar(image)
+      def self.ensure_rgba_uchar(image, on_error: nil)
         img = begin
           image.colourspace('srgb')
-        rescue StandardError
+        rescue StandardError => e
+          raise e if on_error == :raise
+          raise unless vips_error?(e)
           image
         end
 
@@ -80,7 +83,11 @@ module LogoSoup
         img
       end
 
-      private_class_method :downsample, :ensure_rgba_uchar
+      def self.vips_error?(error)
+        error.class.name.start_with?('Vips::')
+      end
+
+      private_class_method :downsample, :ensure_rgba_uchar, :vips_error?
     end
   end
 end

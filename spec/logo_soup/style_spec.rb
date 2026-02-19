@@ -24,6 +24,13 @@ RSpec.describe LogoSoup do
       expect(style).not_to include('transform:')
     end
 
+    it 'raises when SVG numeric parsing fails and on_error: :raise is set' do
+      svg = '<svg viewBox="0 0 x 100" xmlns="http://www.w3.org/2000/svg"></svg>'
+      expect do
+        described_class.style(svg: svg, on_error: :raise)
+      end.to raise_error(StandardError)
+    end
+
     it 'produces a non-zero transform for an off-center raster image' do
       file = Tempfile.new(['logo_soup', '.png'])
       file.close
@@ -68,6 +75,17 @@ RSpec.describe LogoSoup do
       expect(style).to include('width: ')
       expect(style).to include('height: ')
       expect(style).to include('transform: translate(')
+    end
+
+    it 'can raise instead of falling back with on_error: :raise' do
+      file = Tempfile.new(['logo_soup', '.png'])
+      path = file.path
+      file.close
+      file.unlink
+
+      expect do
+        described_class.style(image_path: path, on_error: :raise)
+      end.to raise_error(StandardError)
     end
   end
 end

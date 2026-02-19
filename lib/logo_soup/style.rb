@@ -16,17 +16,16 @@ module LogoSoup
       pixel_budget: 2_048
     }.freeze
 
-    # @param on_error [:raise, #call, nil] error handling strategy
+    # @param on_error [:raise, nil] error handling strategy
     #   - nil (default): return fallback style
     #   - :raise: re-raise the original exception
-    #   - callable: invoked with the exception; still returns fallback unless it raises
     # @return [String] inline CSS style
     def self.call(svg: nil, image_path: nil, image_bytes: nil, content_type: nil, on_error: nil, **options)
       opts = DEFAULTS.merge(options)
       file = nil
 
       if svg
-        intrinsic_w, intrinsic_h = Core::SvgDimensions.call(svg) || [0.0, 0.0]
+        intrinsic_w, intrinsic_h = Core::SvgDimensions.call(svg, on_error: on_error) || [0.0, 0.0]
         build_style(
           intrinsic_width: intrinsic_w,
           intrinsic_height: intrinsic_h,
@@ -42,7 +41,8 @@ module LogoSoup
         features = Core::FeatureMeasurer.call(
           path: image_path,
           contrast_threshold: opts.fetch(:contrast_threshold).to_i,
-          pixel_budget: opts.fetch(:pixel_budget).to_i
+          pixel_budget: opts.fetch(:pixel_budget).to_i,
+          on_error: on_error
         )
 
         build_style(
@@ -57,7 +57,7 @@ module LogoSoup
 
         if content_type.to_s.include?('svg')
           svg_string = bytes.dup.force_encoding('UTF-8')
-          intrinsic_w, intrinsic_h = Core::SvgDimensions.call(svg_string) || [0.0, 0.0]
+          intrinsic_w, intrinsic_h = Core::SvgDimensions.call(svg_string, on_error: on_error) || [0.0, 0.0]
           return build_style(
             intrinsic_width: intrinsic_w,
             intrinsic_height: intrinsic_h,
@@ -86,9 +86,8 @@ module LogoSoup
     def self.handle_error(error, opts:, on_error:)
       case on_error
       when :raise
-        raise
+        raise error
       else
-        on_error.call(error) if on_error.respond_to?(:call)
         fallback_style(opts)
       end
     end

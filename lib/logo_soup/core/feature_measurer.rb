@@ -13,9 +13,10 @@ module LogoSoup
       # @param path [String]
       # @param contrast_threshold [Integer]
       # @param pixel_budget [Integer]
+      # @param on_error [:raise, nil]
       # @return [Hash]
-      def self.call(path:, contrast_threshold:, pixel_budget: DEFAULT_PIXEL_BUDGET)
-        payload = ImageLoader.call(path: path, pixel_budget: pixel_budget)
+      def self.call(path:, contrast_threshold:, pixel_budget: DEFAULT_PIXEL_BUDGET, on_error: nil)
+        payload = ImageLoader.call(path: path, pixel_budget: pixel_budget, on_error: on_error)
         bytes = payload.fetch(:bytes)
         sample_width = payload.fetch(:sample_width)
         sample_height = payload.fetch(:sample_height)
