@@ -1,0 +1,2 @@
+# Brakeman is primarily Rails-focused; we run it as a best-effort scan.
+# The Rake task uses `--force`.

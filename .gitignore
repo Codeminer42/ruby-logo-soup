@@ -1,0 +1,8 @@
+/.bundle/
+/vendor/bundle
+/.ruby-version
+/.ruby-gemset
+/spec/examples.txt
+/coverage/
+/tmp/
+*.gem
