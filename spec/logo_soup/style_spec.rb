@@ -58,7 +58,7 @@ RSpec.describe LogoSoup do
     end
 
     it "produces a non-zero transform for an off-center raster image" do
-      file = Tempfile.new(["logo_soup", ".png"])
+      file = Tempfile.new(["logosoup", ".png"])
       file.close
 
       # White background with a black rectangle near the top => visual center offset.
@@ -105,7 +105,7 @@ RSpec.describe LogoSoup do
     end
 
     it "can raise instead of falling back with on_error: :raise" do
-      file = Tempfile.new(["logo_soup", ".png"])
+      file = Tempfile.new(["logosoup", ".png"])
       path = file.path
       file.close
       file.unlink

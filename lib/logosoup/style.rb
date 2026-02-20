@@ -85,7 +85,7 @@ module LogoSoup
 
       file = nil
       ext = file_extension_for(content_type)
-      file = Tempfile.new(["logo_soup", ext])
+      file = Tempfile.new(["logosoup", ext])
       file.binmode
       file.write(bytes)
       file.flush
@@ -113,7 +113,7 @@ module LogoSoup
     def self.measure_svg_features(svg_string, intrinsic_width:, intrinsic_height:, opts:, on_error:)
       return empty_features if intrinsic_width.to_f <= 0 || intrinsic_height.to_f <= 0
 
-      file = Tempfile.new(["logo_soup", ".svg"])
+      file = Tempfile.new(["logosoup", ".svg"])
       file.binmode
       file.write(svg_string.to_s)
       file.flush

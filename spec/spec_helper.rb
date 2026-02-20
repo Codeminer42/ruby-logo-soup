@@ -17,7 +17,7 @@ if ENV["COVERAGE"] == "1"
   end
 end
 
-require "logo_soup"
+require "logosoup"
 
 RSpec.configure do |config|
   config.disable_monkey_patching!
