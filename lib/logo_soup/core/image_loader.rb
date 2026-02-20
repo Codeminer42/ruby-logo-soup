@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'vips'
+require "vips"
 
 module LogoSoup
   module Core
@@ -21,7 +21,7 @@ module LogoSoup
         rgba = ensure_rgba_uchar(image_small, on_error: on_error)
 
         bytes = rgba.write_to_memory.bytes
-        raise 'Empty image bytes' if bytes.empty?
+        raise "Empty image bytes" if bytes.empty?
 
         {
           bytes: bytes,
@@ -56,14 +56,14 @@ module LogoSoup
 
       def self.ensure_rgba_uchar(image, on_error: nil)
         img = begin
-          image.colourspace('srgb')
+          image.colourspace("srgb")
         rescue StandardError => e
           raise e if on_error == :raise
           raise unless vips_error?(e)
           image
         end
 
-        img = img.cast('uchar')
+        img = img.cast("uchar")
 
         if img.bands > RGBA_CHANNELS
           img = img.extract_band(0, n: RGBA_CHANNELS)
@@ -84,7 +84,7 @@ module LogoSoup
       end
 
       def self.vips_error?(error)
-        error.class.name.start_with?('Vips::')
+        error.class.name.start_with?("Vips::")
       end
 
       private_class_method :downsample, :ensure_rgba_uchar, :vips_error?

@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative 'image_loader'
-require_relative 'background_detector'
-require_relative 'pixel_analyzer'
+require_relative "image_loader"
+require_relative "background_detector"
+require_relative "pixel_analyzer"
 
 module LogoSoup
   module Core

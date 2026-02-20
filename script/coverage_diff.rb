@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require 'json'
+require "json"
 
-baseline_path = ARGV[0] || 'main-coverage/.resultset.json'
-pr_path = ARGV[1] || 'coverage/.resultset.json'
-output_path = ARGV[2] || 'coverage_comment.md'
+baseline_path = ARGV[0] || "main-coverage/.resultset.json"
+pr_path = ARGV[1] || "coverage/.resultset.json"
+output_path = ARGV[2] || "coverage_comment.md"
 
 unless File.exist?(pr_path)
   warn "PR coverage file not found: #{pr_path}"
@@ -18,21 +18,22 @@ pr = JSON.parse(File.read(pr_path))
 
 def extract_run(payload)
   return nil unless payload.is_a?(Hash)
-  payload.values.find { |v| v.is_a?(Hash) && v.key?('coverage') }
+
+  payload.values.find { |v| v.is_a?(Hash) && v.key?("coverage") }
 end
 
 def total_line_coverage(run)
-  coverage = run.fetch('coverage')
+  coverage = run.fetch("coverage")
 
   total = 0
   covered = 0
 
   coverage.each_value do |file_cov|
-    lines = if file_cov.is_a?(Hash) && file_cov.key?('lines')
-              file_cov['lines']
-            else
-              file_cov
-            end
+    lines = if file_cov.is_a?(Hash) && file_cov.key?("lines")
+              file_cov["lines"]
+    else
+      file_cov
+    end
 
     Array(lines).each do |hit|
       next if hit.nil?
@@ -47,7 +48,7 @@ def total_line_coverage(run)
 end
 
 def total_branch_coverage(run)
-  coverage = run.fetch('coverage')
+  coverage = run.fetch("coverage")
 
   total = 0
   covered = 0
@@ -55,7 +56,7 @@ def total_branch_coverage(run)
   coverage.each_value do |file_cov|
     next unless file_cov.is_a?(Hash)
 
-    branches = file_cov['branches']
+    branches = file_cov["branches"]
     next unless branches.is_a?(Hash) && !branches.empty?
 
     branches.each_value do |branch_arms|
@@ -78,7 +79,7 @@ baseline_run = extract_run(baseline)
 pr_run = extract_run(pr)
 
 unless pr_run
-  warn 'Could not find a SimpleCov run with coverage data in PR resultset.'
+  warn "Could not find a SimpleCov run with coverage data in PR resultset."
   exit 3
 end
 
@@ -102,15 +103,15 @@ else
 end
 
 status = if diff.nil?
-           'ℹ️'
-         elsif diff >= 0
-           '✅'
-         else
-           '❌'
-         end
+           "ℹ️"
+elsif diff >= 0
+  "✅"
+else
+  "❌"
+end
 
 lines = []
-lines << '## Coverage Report'
+lines << "## Coverage Report"
 lines <<
   if base_percent
     "Main: #{format('%.2f', base_percent)}% (#{base_covered}/#{base_total})"
@@ -128,13 +129,13 @@ lines <<
 lines << "PR (branches): #{format('%.2f', pr_branch_percent)}% (#{pr_br_covered}/#{pr_br_total})"
 
 if diff
-  lines << ''
-  lines << "Difference: #{status} #{diff >= 0 ? '+' : ''}#{format('%.2f', diff)}%"
+  lines << ""
+  lines << "Difference: #{status} #{'+' if diff >= 0}#{format('%.2f', diff)}%"
 end
 
 if branch_diff
-  branch_status = branch_diff >= 0 ? '✅' : '❌'
-  lines << "Branch difference: #{branch_status} #{branch_diff >= 0 ? '+' : ''}#{format('%.2f', branch_diff)}%"
+  branch_status = branch_diff >= 0 ? "✅" : "❌"
+  lines << "Branch difference: #{branch_status} #{'+' if branch_diff >= 0}#{format('%.2f', branch_diff)}%"
 end
 
 File.write(output_path, lines.join("\n") + "\n")

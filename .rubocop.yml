@@ -5,47 +5,17 @@ AllCops:
   Exclude:
     - "vendor/**/*"
 
-Gemspec/DevelopmentDependencies:
-  Enabled: false
+# GitHub Ruby style
+inherit_gem:
+  rubocop-github:
+    - config/default.yml
 
-Layout/LineLength:
-  Enabled: false
+# Overwrite or add rules to create your own house style
+#
+# # Use `[a, [b, c]]` not `[ a, [ b, c ] ]`
+# Layout/SpaceInsideArrayLiteralBrackets:
+#   Enabled: false
 
-Lint/AmbiguousOperatorPrecedence:
-  Enabled: false
-
-Lint/FloatComparison:
-  Enabled: false
-
-Metrics:
-  Enabled: false
-
-Naming/MethodParameterName:
-  Enabled: false
-
-Style/ComparableClamp:
-  Enabled: false
-
-Style/Documentation:
-  Enabled: false
-
-Style/MultipleComparison:
-  Enabled: false
-
-Style/RedundantParentheses:
-  Enabled: false
-
-Style/SafeNavigation:
-  Enabled: false
-
-Style/StringLiterals:
-  Enabled: false
-
-Style/SymbolProc:
-  Enabled: false
-
-Style/TernaryParentheses:
-  Enabled: false
 
 Metrics/BlockLength:
   Exclude:

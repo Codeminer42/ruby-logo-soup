@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-if ENV['COVERAGE'] == '1'
-  require 'simplecov'
-  require 'simplecov-console'
-  require 'simplecov-lcov'
+if ENV["COVERAGE"] == "1"
+  require "simplecov"
+  require "simplecov-console"
+  require "simplecov-lcov"
 
   SimpleCov.formatters = SimpleCov::Formatter::MultiFormatter.new([
     SimpleCov::Formatter::Console,
@@ -13,11 +13,11 @@ if ENV['COVERAGE'] == '1'
 
   SimpleCov.start do
     enable_coverage :branch
-    add_filter '/spec/'
+    add_filter "/spec/"
   end
 end
 
-require 'logo_soup'
+require "logo_soup"
 
 RSpec.configure do |config|
   config.disable_monkey_patching!

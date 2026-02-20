@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'nokogiri'
+require "nokogiri"
 
 module LogoSoup
   module Core
@@ -17,7 +17,7 @@ module LogoSoup
         svg = doc.at_xpath("//*[local-name()='svg']")
         return nil unless svg
 
-        view_box = svg['viewBox'] || svg['viewbox']
+        view_box = svg["viewBox"] || svg["viewbox"]
         if view_box
           parts = view_box.split(/[\s,]+/).filter_map do |p|
             Float(p)
@@ -28,8 +28,8 @@ module LogoSoup
           return [parts[2], parts[3]] if parts.length == 4
         end
 
-        w = numeric_dimension(svg['width'], on_error: on_error)
-        h = numeric_dimension(svg['height'], on_error: on_error)
+        w = numeric_dimension(svg["width"], on_error: on_error)
+        h = numeric_dimension(svg["height"], on_error: on_error)
         return nil unless w && h
 
         [w, h]

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'tempfile'
-require 'vips'
+require "tempfile"
+require "vips"
 
 module LogoSoup
   # Composes the core logic into a single style string.
@@ -11,7 +11,7 @@ module LogoSoup
       density_aware: true,
       density_factor: 0.5,
       contrast_threshold: 10,
-      align_by: 'visual-center-y',
+      align_by: "visual-center-y",
       pixel_budget: 2_048
     }.freeze
 
@@ -78,14 +78,14 @@ module LogoSoup
       bytes = image_bytes.respond_to?(:read) ? image_bytes.read : image_bytes
       bytes = bytes.to_s
 
-      if content_type.to_s.include?('svg')
-        svg_string = bytes.dup.force_encoding('UTF-8')
+      if content_type.to_s.include?("svg")
+        svg_string = bytes.dup.force_encoding("UTF-8")
         return handle_svg(svg_string, opts: opts, on_error: on_error)
       end
 
       file = nil
       ext = file_extension_for(content_type)
-      file = Tempfile.new(['logo_soup', ext])
+      file = Tempfile.new(["logo_soup", ext])
       file.binmode
       file.write(bytes)
       file.flush
@@ -113,7 +113,7 @@ module LogoSoup
     def self.measure_svg_features(svg_string, intrinsic_width:, intrinsic_height:, opts:, on_error:)
       return empty_features if intrinsic_width.to_f <= 0 || intrinsic_height.to_f <= 0
 
-      file = Tempfile.new(['logo_soup', '.svg'])
+      file = Tempfile.new(["logo_soup", ".svg"])
       file.binmode
       file.write(svg_string.to_s)
       file.flush
@@ -150,13 +150,13 @@ module LogoSoup
 
     def self.file_extension_for(content_type)
       case content_type.to_s
-      when 'image/png' then '.png'
-      when 'image/jpeg', 'image/jpg' then '.jpg'
-      when 'image/webp' then '.webp'
-      when 'image/gif' then '.gif'
-      when 'image/tiff' then '.tif'
+      when "image/png" then ".png"
+      when "image/jpeg", "image/jpg" then ".jpg"
+      when "image/webp" then ".webp"
+      when "image/gif" then ".gif"
+      when "image/tiff" then ".tif"
       else
-        '.img'
+        ".img"
       end
     end
 
@@ -195,8 +195,8 @@ module LogoSoup
       Core::Css.style_string(
         width: "#{normalized_w}px",
         height: "#{normalized_h}px",
-        object_fit: 'contain',
-        display: 'block',
+        object_fit: "contain",
+        display: "block",
         transform: transform
       )
     end
@@ -206,8 +206,8 @@ module LogoSoup
       Core::Css.style_string(
         width: "#{base}px",
         height: "#{base}px",
-        object_fit: 'contain',
-        display: 'block',
+        object_fit: "contain",
+        display: "block",
         transform: nil
       )
     end

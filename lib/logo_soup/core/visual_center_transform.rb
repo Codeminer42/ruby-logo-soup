@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'css'
+require_relative "css"
 
 module LogoSoup
   module Core
@@ -15,7 +15,7 @@ module LogoSoup
       # @return [String, nil]
       def self.call(features:, normalized_width:, normalized_height:, align_by:, intrinsic_width:, intrinsic_height:)
         mode = align_by.to_s.strip
-        return nil if mode.empty? || mode == 'bounds'
+        return nil if mode.empty? || mode == "bounds"
 
         offset_x = features[:visual_center_offset_x]
         offset_y = features[:visual_center_offset_y]
@@ -35,7 +35,7 @@ module LogoSoup
 
         dx_fmt = Css.fmt_tenth_px(dx)
         dy_fmt = Css.fmt_tenth_px(dy)
-        return nil if dx_fmt == '0' && dy_fmt == '0'
+        return nil if dx_fmt == "0" && dy_fmt == "0"
 
         "translate(#{dx_fmt}px, #{dy_fmt}px)"
       end

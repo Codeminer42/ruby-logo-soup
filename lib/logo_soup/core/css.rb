@@ -21,7 +21,7 @@ module LogoSoup
       # @param styles [Hash{Symbol=>String,nil}]
       # @return [String]
       def style_string(styles)
-        styles.compact.map { |key, val| "#{key.to_s.tr('_', '-')}: #{val};" }.join(' ')
+        styles.compact.map { |key, val| "#{key.to_s.tr('_', '-')}: #{val};" }.join(" ")
       end
     end
   end
