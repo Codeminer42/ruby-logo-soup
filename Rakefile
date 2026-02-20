@@ -3,7 +3,17 @@
 require 'rake'
 require 'rspec/core/rake_task'
 
+desc 'Run RSpec (unit tests)'
 RSpec::Core::RakeTask.new(:spec)
+
+namespace :spec do
+  desc 'Run RSpec with coverage enabled (SimpleCov)'
+  task :coverage do
+    ENV['COVERAGE'] = '1'
+    Rake::Task[:spec].reenable
+    Rake::Task[:spec].invoke
+  end
+end
 
 desc 'Run RuboCop'
 task :rubocop do
