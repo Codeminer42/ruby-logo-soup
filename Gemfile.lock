@@ -1,8 +1,8 @@
 PATH
   remote: .
   specs:
-    logosoup (0.1.0)
-      nokogiri (>= 1.15, < 1.19)
+    logosoup (0.1.1)
+      nokogiri (>= 1.15, <= 1.19)
       ruby-vips (>= 2.2, < 3)
 
 GEM

@@ -29,7 +29,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
-  spec.add_dependency "nokogiri", ">= 1.15", "< 1.19"
+  spec.add_dependency "nokogiri", ">= 1.15", "< 2"
   spec.add_dependency "ruby-vips", ">= 2.2", "< 3"
 
   # Development dependencies
