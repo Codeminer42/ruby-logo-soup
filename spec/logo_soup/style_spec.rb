@@ -31,6 +31,32 @@ RSpec.describe LogoSoup do
       end.to raise_error(StandardError)
     end
 
+    it 'can produce a non-zero transform for an off-center SVG' do
+      svg = <<~SVG
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <rect x="40" y="5" width="20" height="15" fill="black"/>
+        </svg>
+      SVG
+
+      # This requires libvips to be compiled with SVG (librsvg) support.
+      begin
+        Vips::Image.new_from_buffer(svg, '')
+      rescue StandardError
+        skip('libvips SVG loader not available')
+      end
+
+      style = described_class.style(
+        svg: svg,
+        base_size: 48,
+        scale_factor: 0.5,
+        density_aware: false,
+        align_by: 'visual-center-y',
+        contrast_threshold: 10
+      )
+
+      expect(style).to include('transform: translate(')
+    end
+
     it 'produces a non-zero transform for an off-center raster image' do
       file = Tempfile.new(['logo_soup', '.png'])
       file.close

@@ -19,7 +19,7 @@ module LogoSoup
     #   - nil (default): return fallback style
     #   - :raise: re-raise the original exception
     # @return [String] inline CSS style
-    def self.call(svg: nil, image_path: nil, image_bytes: nil, content_type: nil, base_size:, on_error: nil, **options)
+    def self.call(base_size:, svg: nil, image_path: nil, image_bytes: nil, content_type: nil, on_error: nil, **options)
       opts = DEFAULTS.merge(options).merge(base_size: base_size)
 
       if svg
@@ -37,10 +37,18 @@ module LogoSoup
 
     def self.handle_svg(svg_string, opts:, on_error:)
       intrinsic_w, intrinsic_h = Core::SvgDimensions.call(svg_string, on_error: on_error) || [0.0, 0.0]
+
+      features =
+        if wants_visual_center?(opts.fetch(:align_by, nil))
+          measure_svg_features(svg_string, intrinsic_width: intrinsic_w, intrinsic_height: intrinsic_h, opts: opts, on_error: on_error)
+        else
+          empty_features
+        end
+
       build_style(
         intrinsic_width: intrinsic_w,
         intrinsic_height: intrinsic_h,
-        features: empty_features,
+        features: features,
         **opts
       )
     end
@@ -95,6 +103,49 @@ module LogoSoup
       else
         fallback_style(opts)
       end
+    end
+
+    def self.wants_visual_center?(align_by)
+      mode = align_by.to_s.strip
+      %w[visual-center visual-center-x visual-center-y].include?(mode)
+    end
+
+    def self.measure_svg_features(svg_string, intrinsic_width:, intrinsic_height:, opts:, on_error:)
+      return empty_features if intrinsic_width.to_f <= 0 || intrinsic_height.to_f <= 0
+
+      file = Tempfile.new(['logo_soup', '.svg'])
+      file.binmode
+      file.write(svg_string.to_s)
+      file.flush
+      file.close
+
+      rendered = Vips::Image.new_from_file(file.path, access: :sequential)
+      rendered_w = rendered.width.to_f
+      rendered_h = rendered.height.to_f
+      return empty_features if rendered_w <= 0 || rendered_h <= 0
+
+      measured = Core::FeatureMeasurer.call(
+        path: file.path,
+        contrast_threshold: opts.fetch(:contrast_threshold).to_i,
+        pixel_budget: opts.fetch(:pixel_budget).to_i,
+        on_error: on_error
+      )
+
+      scale_x = intrinsic_width.to_f / rendered_w
+      scale_y = intrinsic_height.to_f / rendered_h
+
+      scaled = measured.dup
+      scaled[:content_box_width] = scaled[:content_box_width].to_f * scale_x if scaled[:content_box_width].is_a?(Numeric)
+      scaled[:content_box_height] = scaled[:content_box_height].to_f * scale_y if scaled[:content_box_height].is_a?(Numeric)
+      scaled[:visual_center_offset_x] = scaled[:visual_center_offset_x].to_f * scale_x if scaled[:visual_center_offset_x].is_a?(Numeric)
+      scaled[:visual_center_offset_y] = scaled[:visual_center_offset_y].to_f * scale_y if scaled[:visual_center_offset_y].is_a?(Numeric)
+      scaled
+    rescue StandardError => e
+      raise e if on_error == :raise
+
+      empty_features
+    ensure
+      file.unlink if file
     end
 
     def self.file_extension_for(content_type)
@@ -178,6 +229,8 @@ module LogoSoup
                          :handle_error,
                          :handle_svg,
                          :handle_image_path,
-                         :handle_image_bytes
+                         :handle_image_bytes,
+                         :measure_svg_features,
+                         :wants_visual_center?
   end
 end
