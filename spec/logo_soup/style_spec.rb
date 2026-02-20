@@ -5,7 +5,7 @@ require 'tempfile'
 RSpec.describe LogoSoup do
   describe '.style' do
     it 'returns a deterministic fallback style for empty input' do
-      style = described_class.style
+      style = described_class.style(base_size: 48)
       expect(style).to include('width: 48px;')
       expect(style).to include('height: 48px;')
       expect(style).to include('object-fit: contain;')
@@ -27,7 +27,7 @@ RSpec.describe LogoSoup do
     it 'raises when SVG numeric parsing fails and on_error: :raise is set' do
       svg = '<svg viewBox="0 0 x 100" xmlns="http://www.w3.org/2000/svg"></svg>'
       expect do
-        described_class.style(svg: svg, on_error: :raise)
+        described_class.style(svg: svg, base_size: 48, on_error: :raise)
       end.to raise_error(StandardError)
     end
 
@@ -84,7 +84,7 @@ RSpec.describe LogoSoup do
       file.unlink
 
       expect do
-        described_class.style(image_path: path, on_error: :raise)
+        described_class.style(image_path: path, base_size: 48, on_error: :raise)
       end.to raise_error(StandardError)
     end
   end

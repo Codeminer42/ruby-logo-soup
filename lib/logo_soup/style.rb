@@ -7,7 +7,6 @@ module LogoSoup
   # Composes the core logic into a single style string.
   class Style
     DEFAULTS = {
-      base_size: 48,
       scale_factor: 0.5,
       density_aware: true,
       density_factor: 0.5,
@@ -20,8 +19,8 @@ module LogoSoup
     #   - nil (default): return fallback style
     #   - :raise: re-raise the original exception
     # @return [String] inline CSS style
-    def self.call(svg: nil, image_path: nil, image_bytes: nil, content_type: nil, on_error: nil, **options)
-      opts = DEFAULTS.merge(options)
+    def self.call(svg: nil, image_path: nil, image_bytes: nil, content_type: nil, base_size:, on_error: nil, **options)
+      opts = DEFAULTS.merge(options).merge(base_size: base_size)
       file = nil
 
       if svg
@@ -73,12 +72,12 @@ module LogoSoup
         file.flush
         file.close
 
-        call(image_path: file.path, content_type: content_type, on_error: on_error, **options)
+        call(image_path: file.path, content_type: content_type, base_size: base_size, on_error: on_error, **options)
       else
         fallback_style(opts)
       end
     rescue StandardError => e
-      handle_error(e, opts: (opts || DEFAULTS), on_error: on_error)
+      handle_error(e, opts: opts, on_error: on_error)
     ensure
       file.unlink if file
     end
@@ -146,7 +145,7 @@ module LogoSoup
     end
 
     def self.fallback_style(opts)
-      base = opts.fetch(:base_size, 48).to_i
+      base = opts.fetch(:base_size).to_i
       Core::Css.style_string(
         width: "#{base}px",
         height: "#{base}px",
