@@ -21,63 +21,69 @@ module LogoSoup
     # @return [String] inline CSS style
     def self.call(svg: nil, image_path: nil, image_bytes: nil, content_type: nil, base_size:, on_error: nil, **options)
       opts = DEFAULTS.merge(options).merge(base_size: base_size)
-      file = nil
 
       if svg
-        intrinsic_w, intrinsic_h = Core::SvgDimensions.call(svg, on_error: on_error) || [0.0, 0.0]
-        build_style(
-          intrinsic_width: intrinsic_w,
-          intrinsic_height: intrinsic_h,
-          features: empty_features,
-          **opts
-        )
+        handle_svg(svg, opts: opts, on_error: on_error)
       elsif image_path
-        # Raster analysis is required; libvips must be installed.
-        image = Vips::Image.new_from_file(image_path, access: :sequential)
-        intrinsic_w = image.width
-        intrinsic_h = image.height
-
-        features = Core::FeatureMeasurer.call(
-          path: image_path,
-          contrast_threshold: opts.fetch(:contrast_threshold).to_i,
-          pixel_budget: opts.fetch(:pixel_budget).to_i,
-          on_error: on_error
-        )
-
-        build_style(
-          intrinsic_width: intrinsic_w,
-          intrinsic_height: intrinsic_h,
-          features: features,
-          **opts
-        )
+        handle_image_path(image_path, opts: opts, on_error: on_error)
       elsif image_bytes
-        bytes = image_bytes.respond_to?(:read) ? image_bytes.read : image_bytes
-        bytes = bytes.to_s
-
-        if content_type.to_s.include?('svg')
-          svg_string = bytes.dup.force_encoding('UTF-8')
-          intrinsic_w, intrinsic_h = Core::SvgDimensions.call(svg_string, on_error: on_error) || [0.0, 0.0]
-          return build_style(
-            intrinsic_width: intrinsic_w,
-            intrinsic_height: intrinsic_h,
-            features: empty_features,
-            **opts
-          )
-        end
-
-        ext = file_extension_for(content_type)
-        file = Tempfile.new(['logo_soup', ext])
-        file.binmode
-        file.write(bytes)
-        file.flush
-        file.close
-
-        call(image_path: file.path, content_type: content_type, base_size: base_size, on_error: on_error, **options)
+        handle_image_bytes(image_bytes, content_type: content_type, opts: opts, on_error: on_error)
       else
         fallback_style(opts)
       end
     rescue StandardError => e
       handle_error(e, opts: opts, on_error: on_error)
+    end
+
+    def self.handle_svg(svg_string, opts:, on_error:)
+      intrinsic_w, intrinsic_h = Core::SvgDimensions.call(svg_string, on_error: on_error) || [0.0, 0.0]
+      build_style(
+        intrinsic_width: intrinsic_w,
+        intrinsic_height: intrinsic_h,
+        features: empty_features,
+        **opts
+      )
+    end
+
+    def self.handle_image_path(image_path, opts:, on_error:)
+      # Raster analysis is required; libvips must be installed.
+      image = Vips::Image.new_from_file(image_path, access: :sequential)
+      intrinsic_w = image.width
+      intrinsic_h = image.height
+
+      features = Core::FeatureMeasurer.call(
+        path: image_path,
+        contrast_threshold: opts.fetch(:contrast_threshold).to_i,
+        pixel_budget: opts.fetch(:pixel_budget).to_i,
+        on_error: on_error
+      )
+
+      build_style(
+        intrinsic_width: intrinsic_w,
+        intrinsic_height: intrinsic_h,
+        features: features,
+        **opts
+      )
+    end
+
+    def self.handle_image_bytes(image_bytes, content_type:, opts:, on_error:)
+      bytes = image_bytes.respond_to?(:read) ? image_bytes.read : image_bytes
+      bytes = bytes.to_s
+
+      if content_type.to_s.include?('svg')
+        svg_string = bytes.dup.force_encoding('UTF-8')
+        return handle_svg(svg_string, opts: opts, on_error: on_error)
+      end
+
+      file = nil
+      ext = file_extension_for(content_type)
+      file = Tempfile.new(['logo_soup', ext])
+      file.binmode
+      file.write(bytes)
+      file.flush
+      file.close
+
+      handle_image_path(file.path, opts: opts, on_error: on_error)
     ensure
       file.unlink if file
     end
@@ -165,6 +171,13 @@ module LogoSoup
       }
     end
 
-    private_class_method :build_style, :fallback_style, :empty_features, :file_extension_for, :handle_error
+    private_class_method :build_style,
+                         :fallback_style,
+                         :empty_features,
+                         :file_extension_for,
+                         :handle_error,
+                         :handle_svg,
+                         :handle_image_path,
+                         :handle_image_bytes
   end
 end
