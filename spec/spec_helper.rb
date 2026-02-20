@@ -1,5 +1,22 @@
 # frozen_string_literal: true
 
+if ENV['COVERAGE'] == '1'
+  require 'simplecov'
+  require 'simplecov-console'
+  require 'simplecov-lcov'
+
+  SimpleCov.formatters = SimpleCov::Formatter::MultiFormatter.new([
+    SimpleCov::Formatter::Console,
+    SimpleCov::Formatter::HTMLFormatter,
+    SimpleCov::Formatter::LcovFormatter
+  ])
+
+  SimpleCov.start do
+    enable_coverage :branch
+    add_filter '/spec/'
+  end
+end
+
 require 'logo_soup'
 
 RSpec.configure do |config|

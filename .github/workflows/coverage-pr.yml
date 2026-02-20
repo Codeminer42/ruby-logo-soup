@@ -1,0 +1,51 @@
+name: Coverage PR
+
+on:
+  pull_request:
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+
+    permissions:
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install libvips
+        run: sudo apt-get update && sudo apt-get install -y libvips
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.4'
+          bundler-cache: true
+
+      - name: Run tests with coverage
+        env:
+          COVERAGE: '1'
+        run: bundle exec rspec
+
+      - name: Download main coverage baseline
+        uses: dawidd6/action-download-artifact@v3
+        with:
+          workflow: coverage-main.yml
+          workflow_conclusion: success
+          branch: main
+          name: main-coverage
+          path: main-coverage
+
+      - name: Compare coverage
+        run: ruby script/coverage_diff.rb main-coverage/.resultset.json coverage/.resultset.json coverage_comment.md
+
+      - name: Post coverage comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          path: coverage_comment.md
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-coverage-reports
+          path: coverage/

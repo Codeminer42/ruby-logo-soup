@@ -36,6 +36,11 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rake', '>= 13.0'
   spec.add_development_dependency 'rspec', '~> 3.12'
 
+  # Coverage (for CI)
+  spec.add_development_dependency 'simplecov', '~> 0.22'
+  spec.add_development_dependency 'simplecov-lcov', '~> 0.8'
+  spec.add_development_dependency 'simplecov-console', '~> 0.9'
+
   # Pin RuboCop to a line that still supports Ruby 2.7.
   spec.add_development_dependency 'rubocop', '~> 1.50'
 

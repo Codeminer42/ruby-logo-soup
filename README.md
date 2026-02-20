@@ -28,6 +28,11 @@ Example (conceptual):
 
 The gem will use **RSpec** for unit testing.
 
+### Coverage
+
+- Local: run `COVERAGE=1 bundle exec rspec` to generate reports under `coverage/`.
+- CI: GitHub Actions generates a baseline on `main` and compares PR coverage against it.
+
 ## Notes
 
 - No Rails dependencies.
