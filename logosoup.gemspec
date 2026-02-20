@@ -33,7 +33,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ruby-vips", ">= 2.2", "< 3"
 
   # Development dependencies
-  spec.add_development_dependency "rake", ">= 13.0"
+  spec.add_development_dependency "rake", "~> 13.0"
   spec.add_development_dependency "rspec", "~> 3.12"
 
   # Coverage (for CI)
@@ -43,8 +43,8 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "minitest", ">= 5", "< 5.26"
 
   spec.add_development_dependency "rubocop", "~> 1.50"
-  spec.add_development_dependency "rubocop-github"
-  spec.add_development_dependency "rubocop-performance"
+  spec.add_development_dependency "rubocop-github", "~> 0.26"
+  spec.add_development_dependency "rubocop-performance", "~> 1.26"
   # Keep rubocop-rails transitive dependencies compatible with Ruby 2.7/3.0 CI jobs.
   spec.add_development_dependency "activesupport", ">= 6.1", "< 7.1"
 
