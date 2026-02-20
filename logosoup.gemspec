@@ -3,14 +3,14 @@
 require_relative 'lib/logo_soup/version'
 
 Gem::Specification.new do |spec|
-  spec.name = 'logo-soup'
+  spec.name = 'logosoup'
   spec.version = LogoSoup::VERSION
   spec.authors = ['Codeminer42']
   spec.email = ['dev@codeminer42.com']
 
   spec.summary = 'Framework-agnostic logo normalization (CSS style output)'
   spec.description = 'Compute CSS sizing/alignment styles for SVG and raster logos with consistent perceived rendering.'
-  spec.homepage = 'https://example.com/logo-soup'
+  spec.homepage = 'https://example.com/logosoup'
   spec.license = 'MIT'
 
   spec.required_ruby_version = '>= 2.7', '< 4.0'

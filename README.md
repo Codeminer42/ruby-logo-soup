@@ -1,4 +1,4 @@
-# logo-soup
+# logosoup
 
 Framework-agnostic Ruby gem for normalizing logo rendering.
 
