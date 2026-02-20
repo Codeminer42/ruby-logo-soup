@@ -13,7 +13,7 @@ Gem::Specification.new do |spec|
   spec.homepage = "https://example.com/logosoup"
   spec.license = "MIT"
 
-  spec.required_ruby_version = ">= 2.7", "< 4.0"
+  spec.required_ruby_version = ">= 3.1", "< 4.0"
 
   spec.metadata["rubygems_mfa_required"] = "true"
 
@@ -29,7 +29,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
-  spec.add_dependency "nokogiri", ">= 1.15", "< 3"
+  spec.add_dependency "nokogiri", ">= 1.15", "< 1.19"
   spec.add_dependency "ruby-vips", ">= 2.2", "< 3"
 
   # Development dependencies
@@ -40,11 +40,13 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "simplecov", "~> 0.22"
   spec.add_development_dependency "simplecov-lcov", "~> 0.8"
   spec.add_development_dependency "simplecov-console", "~> 0.9"
+  spec.add_development_dependency "minitest", ">= 5", "< 5.26"
 
-  # Pin RuboCop to a line that still supports Ruby 2.7.
   spec.add_development_dependency "rubocop", "~> 1.50"
   spec.add_development_dependency "rubocop-github"
   spec.add_development_dependency "rubocop-performance"
+  # Keep rubocop-rails transitive dependencies compatible with Ruby 2.7/3.0 CI jobs.
+  spec.add_development_dependency "activesupport", ">= 6.1", "< 7.1"
 
   spec.add_development_dependency "brakeman", "~> 6.1"
 end
