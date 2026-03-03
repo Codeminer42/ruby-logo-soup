@@ -5,12 +5,12 @@ require_relative "lib/logosoup/version"
 Gem::Specification.new do |spec|
   spec.name = "logosoup"
   spec.version = LogoSoup::VERSION
-  spec.authors = ["Alexandre Camillo"]
-  spec.email = ["alexandre.camillo@codeminer42.com"]
+  spec.authors = ["Alexandre Camillo", "Edy Silva", "Carlos Lopes"]
+  spec.email = "opensource@codeminer42.com"
 
   spec.summary = "Framework-agnostic logo normalization (CSS style output)"
   spec.description = "Compute CSS sizing/alignment styles for SVG and raster logos with consistent perceived rendering."
-  spec.homepage = "https://example.com/logosoup"
+  spec.homepage = "https://github.com/Codeminer42/ruby-logo-soup"
   spec.license = "MIT"
 
   spec.required_ruby_version = ">= 3.1", "< 4.0"
@@ -20,7 +20,7 @@ Gem::Specification.new do |spec|
   spec.files = Dir.chdir(__dir__) do
     Dir[
       "README.md",
-      "LICENSE.txt",
+      "LICENSE",
       "CHANGELOG.md",
       "lib/**/*.rb"
     ]
