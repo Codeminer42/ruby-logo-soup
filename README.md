@@ -1,5 +1,8 @@
 # LogoSoup
 
+<img align="right" height="60"
+     title="Codeminer42 logo" src="docs/logo.png">
+
 [![Version](https://img.shields.io/badge/version-0.1.0-blue)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE.txt)
 [![Coverage](https://img.shields.io/badge/coverage-86.14%25-brightgreen)](coverage/index.html)
@@ -8,7 +11,7 @@ Framework-agnostic Ruby gem for **normalizing logo rendering**.
 
 Given an input logo (SVG or raster), LogoSoup returns an **inline CSS style string** that you can apply to an `<img>` (or equivalent) so different logos render with a consistent perceived size, with optional visual-center alignment.
 
-This gem is inspired by the original Logo Soup project for React ([auroris/logo-soup](https://github.com/auroris/logo-soup)) developed by [Rostislav Melkumyan](https://www.sanity.io/blog/the-logo-soup-problem).
+This gem is a Ruby port of the original [Logo Soup](https://github.com/auroris/logo-soup) React library, inspired by the article [The logo soup problem (and how to solve it)](https://www.sanity.io/blog/the-logo-soup-problem) by Rostislav Melkumyan.
 
 ## Why
 
