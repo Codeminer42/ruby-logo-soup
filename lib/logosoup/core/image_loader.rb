@@ -8,19 +8,25 @@ module LogoSoup
     class ImageLoader
       RGBA_CHANNELS = 4
 
-      # @param path [String]
+      # @param path [String, nil] file path; mutually exclusive with buffer
+      # @param buffer [String, nil] binary image bytes; mutually exclusive with path
       # @param pixel_budget [Integer]
       # @param on_error [:raise, nil]
       # @return [Hash]
-      def self.call(path:, pixel_budget:, on_error: nil)
-        image = Vips::Image.new_from_file(path, access: :sequential)
+      def self.call(pixel_budget:, path: nil, buffer: nil, on_error: nil)
+        image =
+          if buffer
+            Vips::Image.new_from_buffer(buffer, "", access: :sequential)
+          else
+            Vips::Image.new_from_file(path, access: :sequential)
+          end
         original_width = image.width
         original_height = image.height
 
         sample_width, sample_height, image_small = downsample(image, pixel_budget: pixel_budget)
         rgba = ensure_rgba_uchar(image_small, on_error: on_error)
 
-        bytes = rgba.write_to_memory.bytes
+        bytes = rgba.write_to_memory
         raise "Empty image bytes" if bytes.empty?
 
         {
@@ -65,22 +71,22 @@ module LogoSoup
 
         img = img.cast("uchar")
 
-        if img.bands > RGBA_CHANNELS
-          img = img.extract_band(0, n: RGBA_CHANNELS)
-        elsif img.bands == 3
-          img = img.bandjoin(255)
-        elsif img.bands == 2
+        case img.bands
+        when 0
+          img
+        when 1
+          img.bandjoin(img).bandjoin(img).bandjoin(255)
+        when 2
           gray = img.extract_band(0)
           alpha = img.extract_band(1)
-          rgb = gray.bandjoin(gray).bandjoin(gray)
-          img = rgb.bandjoin(alpha)
-        elsif img.bands == 1
-          gray = img
-          rgb = gray.bandjoin(gray).bandjoin(gray)
-          img = rgb.bandjoin(255)
+          gray.bandjoin(gray).bandjoin(gray).bandjoin(alpha)
+        when 3
+          img.bandjoin(255)
+        when RGBA_CHANNELS
+          img
+        else
+          img.extract_band(0, n: RGBA_CHANNELS)
         end
-
-        img
       end
 
       def self.vips_error?(error)

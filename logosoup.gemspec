@@ -40,13 +40,14 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "simplecov", "~> 0.22"
   spec.add_development_dependency "simplecov-lcov", "~> 0.8"
   spec.add_development_dependency "simplecov-console", "~> 0.9"
-  spec.add_development_dependency "minitest", ">= 5", "< 5.26"
+  spec.add_development_dependency "minitest", "~> 5.1"
 
   spec.add_development_dependency "rubocop", "~> 1.50"
   spec.add_development_dependency "rubocop-github", "~> 0.26"
   spec.add_development_dependency "rubocop-performance", "~> 1.26"
-  # Keep rubocop-rails transitive dependencies compatible with Ruby 2.7/3.0 CI jobs.
-  spec.add_development_dependency "activesupport", ">= 6.1", "< 7.1"
+  # rubocop-rails pulls activesupport transitively; the explicit pin only fixes
+  # the resolver to the same major. Bump the upper bound when bumping Ruby.
+  spec.add_development_dependency "activesupport", ">= 6.1", "< 8"
 
   spec.add_development_dependency "brakeman", "~> 6.1"
 end

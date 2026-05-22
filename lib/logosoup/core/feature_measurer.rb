@@ -10,18 +10,19 @@ module LogoSoup
     class FeatureMeasurer
       DEFAULT_PIXEL_BUDGET = 2_048
 
-      # @param path [String]
+      # @param path [String, nil] file path; mutually exclusive with buffer
+      # @param buffer [String, nil] binary image bytes; mutually exclusive with path
       # @param contrast_threshold [Integer]
       # @param pixel_budget [Integer]
       # @param on_error [:raise, nil]
-      # @return [Hash]
-      def self.call(path:, contrast_threshold:, pixel_budget: DEFAULT_PIXEL_BUDGET, on_error: nil)
-        payload = ImageLoader.call(path: path, pixel_budget: pixel_budget, on_error: on_error)
+      # @return [Hash] features plus :source_width / :source_height
+      def self.call(contrast_threshold:, path: nil, buffer: nil, pixel_budget: DEFAULT_PIXEL_BUDGET, on_error: nil)
+        payload = ImageLoader.call(path: path, buffer: buffer, pixel_budget: pixel_budget, on_error: on_error)
         bytes = payload.fetch(:bytes)
         sample_width = payload.fetch(:sample_width)
         sample_height = payload.fetch(:sample_height)
-        original_width = payload.fetch(:original_width)
-        original_height = payload.fetch(:original_height)
+        source_width = payload.fetch(:original_width)
+        source_height = payload.fetch(:original_height)
 
         alpha_only, bg_r, bg_g, bg_b = BackgroundDetector.call(bytes, sample_width, sample_height)
 
@@ -29,8 +30,8 @@ module LogoSoup
           bytes: bytes,
           sample_width: sample_width,
           sample_height: sample_height,
-          original_width: original_width,
-          original_height: original_height,
+          original_width: source_width,
+          original_height: source_height,
           contrast_threshold: contrast_threshold,
           alpha_only: alpha_only,
           bg_r: bg_r,
@@ -38,7 +39,8 @@ module LogoSoup
           bg_b: bg_b
         )
 
-        measured || default_features(original_width, original_height)
+        features = measured || default_features(source_width, source_height)
+        features.merge(source_width: source_width, source_height: source_height)
       end
 
       def self.default_features(w, h)
