@@ -29,11 +29,7 @@ def total_line_coverage(run)
   covered = 0
 
   coverage.each_value do |file_cov|
-    lines = if file_cov.is_a?(Hash) && file_cov.key?("lines")
-              file_cov["lines"]
-    else
-      file_cov
-    end
+    lines = file_cov.is_a?(Hash) && file_cov.key?("lines") ? file_cov["lines"] : file_cov
 
     Array(lines).each do |hit|
       next if hit.nil?
@@ -86,46 +82,31 @@ end
 pr_percent, pr_covered, pr_total = total_line_coverage(pr_run)
 pr_branch_percent, pr_br_covered, pr_br_total = total_branch_coverage(pr_run)
 
+base_percent = base_covered = base_total = nil
+base_branch_percent = base_br_covered = base_br_total = nil
+diff = branch_diff = nil
+
 if baseline_run
   base_percent, base_covered, base_total = total_line_coverage(baseline_run)
   base_branch_percent, base_br_covered, base_br_total = total_branch_coverage(baseline_run)
   diff = pr_percent - base_percent
   branch_diff = pr_branch_percent - base_branch_percent
-else
-  base_percent = nil
-  base_covered = nil
-  base_total = nil
-  base_branch_percent = nil
-  base_br_covered = nil
-  base_br_total = nil
-  diff = nil
-  branch_diff = nil
 end
 
-status = if diff.nil?
-           "ℹ️"
-elsif diff >= 0
-  "✅"
-else
-  "❌"
-end
+status =
+  if diff.nil?
+    "ℹ️"
+  elsif diff >= 0
+    "✅"
+  else
+    "❌"
+  end
 
 lines = []
 lines << "## Coverage Report"
-lines <<
-  if base_percent
-    "Main: #{format('%.2f', base_percent)}% (#{base_covered}/#{base_total})"
-  else
-    "Main: (baseline not available)"
-  end
+lines << (base_percent ? "Main: #{format('%.2f', base_percent)}% (#{base_covered}/#{base_total})" : "Main: (baseline not available)")
 lines << "PR: #{format('%.2f', pr_percent)}% (#{pr_covered}/#{pr_total})"
-
-lines <<
-  if base_branch_percent
-    "Main (branches): #{format('%.2f', base_branch_percent)}% (#{base_br_covered}/#{base_br_total})"
-  else
-    "Main (branches): (baseline not available)"
-  end
+lines << (base_branch_percent ? "Main (branches): #{format('%.2f', base_branch_percent)}% (#{base_br_covered}/#{base_br_total})" : "Main (branches): (baseline not available)")
 lines << "PR (branches): #{format('%.2f', pr_branch_percent)}% (#{pr_br_covered}/#{pr_br_total})"
 
 if diff

@@ -114,5 +114,17 @@ RSpec.describe LogoSoup do
         described_class.style(image_path: path, base_size: 48, on_error: :raise)
       end.to raise_error(StandardError)
     end
+
+    it "warns when given an unknown option key" do
+      expect do
+        described_class.style(base_size: 48, align: "visual-center")
+      end.to output(/unknown option/).to_stderr
+    end
+
+    it "raises ArgumentError when image_bytes is not a String or IO-like" do
+      expect do
+        described_class.style(base_size: 48, image_bytes: 42, content_type: "image/png", on_error: :raise)
+      end.to raise_error(ArgumentError, /image_bytes/)
+    end
   end
 end

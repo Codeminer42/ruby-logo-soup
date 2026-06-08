@@ -16,11 +16,10 @@ module LogoSoup
         rounded.to_i == rounded ? rounded.to_i.to_s : rounded.to_s
       end
 
-      # Builds an inline style string from a hash.
+      # Builds an inline style string from keyword arguments.
       #
-      # @param styles [Hash{Symbol=>String,nil}]
       # @return [String]
-      def style_string(styles)
+      def style_string(**styles)
         styles.compact.map { |key, val| "#{key.to_s.tr('_', '-')}: #{val};" }.join(" ")
       end
     end

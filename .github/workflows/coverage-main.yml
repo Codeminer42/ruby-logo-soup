@@ -1,17 +1,22 @@
 name: Coverage Main
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   coverage:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Install libvips
-        run: sudo apt-get update && sudo apt-get install -y libvips
+        run: sudo apt-get update && sudo apt-get install -y libvips librsvg2-2
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -35,3 +40,43 @@ jobs:
         with:
           name: main-coverage-reports
           path: coverage/
+
+      - name: Generate coverage badge JSON
+        run: |
+          mkdir -p /tmp/badge
+          ruby <<'RUBY' > /tmp/badge/coverage.json
+          require "json"
+          data = JSON.parse(File.read("coverage/.last_run.json"))
+          line = data.dig("result", "line").to_f
+          color =
+            case line
+            when 90.. then "brightgreen"
+            when 75.. then "green"
+            when 60.. then "yellow"
+            when 40.. then "orange"
+            else "red"
+            end
+          puts JSON.generate(
+            schemaVersion: 1,
+            label: "coverage",
+            message: format("%.2f%%", line),
+            color: color
+          )
+          RUBY
+          cat /tmp/badge/coverage.json
+
+      - name: Publish badge to badges branch
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cd /tmp/badge
+          git init -q --initial-branch=badges
+          git add coverage.json
+          git commit -q -m "ci: update coverage badge [skip ci]"
+          git push --force --quiet \
+            "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" \
+            badges:badges

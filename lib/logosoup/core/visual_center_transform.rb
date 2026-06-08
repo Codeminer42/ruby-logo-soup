@@ -6,6 +6,15 @@ module LogoSoup
   module Core
     # Computes a CSS translate() transform to align by visual center.
     class VisualCenterTransform
+      MODE_BOUNDS = "bounds"
+      MODES_VC_X = %w[visual-center visual-center-x].freeze
+      MODES_VC_Y = %w[visual-center visual-center-y].freeze
+      MODES_VC_ANY = (MODES_VC_X | MODES_VC_Y).freeze
+
+      def self.visual_center?(align_by)
+        MODES_VC_ANY.include?(align_by.to_s.strip)
+      end
+
       # @param features [Hash]
       # @param normalized_width [Numeric]
       # @param normalized_height [Numeric]
@@ -15,7 +24,7 @@ module LogoSoup
       # @return [String, nil]
       def self.call(features:, normalized_width:, normalized_height:, align_by:, intrinsic_width:, intrinsic_height:)
         mode = align_by.to_s.strip
-        return nil if mode.empty? || mode == "bounds"
+        return nil if mode.empty? || mode == MODE_BOUNDS
 
         offset_x = features[:visual_center_offset_x]
         offset_y = features[:visual_center_offset_y]
@@ -30,8 +39,8 @@ module LogoSoup
         scale_x = normalized_width.to_f / content_w
         scale_y = normalized_height.to_f / content_h
 
-        dx = %w[visual-center visual-center-x].include?(mode) ? (-offset_x.to_f * scale_x) : 0.0
-        dy = %w[visual-center visual-center-y].include?(mode) ? (-offset_y.to_f * scale_y) : 0.0
+        dx = MODES_VC_X.include?(mode) ? (-offset_x.to_f * scale_x) : 0.0
+        dy = MODES_VC_Y.include?(mode) ? (-offset_y.to_f * scale_y) : 0.0
 
         dx_fmt = Css.fmt_tenth_px(dx)
         dy_fmt = Css.fmt_tenth_px(dy)

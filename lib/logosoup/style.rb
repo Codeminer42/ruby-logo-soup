@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "tempfile"
 require "vips"
 
 module LogoSoup
@@ -12,7 +11,7 @@ module LogoSoup
       density_factor: 0.5,
       contrast_threshold: 10,
       align_by: "visual-center-y",
-      pixel_budget: 2_048
+      pixel_budget: Core::FeatureMeasurer::DEFAULT_PIXEL_BUDGET
     }.freeze
 
     # @param on_error [:raise, nil] error handling strategy
@@ -20,6 +19,7 @@ module LogoSoup
     #   - :raise: re-raise the original exception
     # @return [String] inline CSS style
     def self.call(base_size:, svg: nil, image_path: nil, image_bytes: nil, content_type: nil, on_error: nil, **options)
+      warn_unknown_options(options)
       opts = DEFAULTS.merge(options).merge(base_size: base_size)
 
       if svg
@@ -35,11 +35,19 @@ module LogoSoup
       handle_error(e, opts: opts, on_error: on_error)
     end
 
+    def self.warn_unknown_options(options)
+      unknown = options.keys - DEFAULTS.keys
+      return if unknown.empty?
+
+      warn "[LogoSoup] ignoring unknown option(s): #{unknown.join(', ')} " \
+           "(known: #{DEFAULTS.keys.join(', ')})"
+    end
+
     def self.handle_svg(svg_string, opts:, on_error:)
       intrinsic_w, intrinsic_h = Core::SvgDimensions.call(svg_string, on_error: on_error) || [0.0, 0.0]
 
       features =
-        if wants_visual_center?(opts.fetch(:align_by, nil))
+        if Core::VisualCenterTransform.visual_center?(opts.fetch(:align_by, nil))
           measure_svg_features(svg_string, intrinsic_width: intrinsic_w, intrinsic_height: intrinsic_h, opts: opts, on_error: on_error)
         else
           empty_features
@@ -54,46 +62,42 @@ module LogoSoup
     end
 
     def self.handle_image_path(image_path, opts:, on_error:)
-      # Raster analysis is required; libvips must be installed.
-      image = Vips::Image.new_from_file(image_path, access: :sequential)
-      intrinsic_w = image.width
-      intrinsic_h = image.height
+      analyze_raster(path: image_path, opts: opts, on_error: on_error)
+    end
 
+    def self.handle_image_bytes(image_bytes, content_type:, opts:, on_error:)
+      bytes = image_bytes.respond_to?(:read) ? image_bytes.read : image_bytes
+      unless bytes.is_a?(String)
+        raise ArgumentError, "image_bytes must be a String or an IO-like object (got #{bytes.class})"
+      end
+
+      if content_type.to_s.include?("svg")
+        return handle_svg(coerce_to_utf8(bytes), opts: opts, on_error: on_error)
+      end
+
+      analyze_raster(buffer: bytes, opts: opts, on_error: on_error)
+    end
+
+    def self.coerce_to_utf8(bytes)
+      bytes.dup.force_encoding(Encoding::BINARY)
+           .encode(Encoding::UTF_8, invalid: :replace, undef: :replace)
+    end
+
+    def self.analyze_raster(opts:, on_error:, path: nil, buffer: nil)
       features = Core::FeatureMeasurer.call(
-        path: image_path,
+        path: path,
+        buffer: buffer,
         contrast_threshold: opts.fetch(:contrast_threshold).to_i,
         pixel_budget: opts.fetch(:pixel_budget).to_i,
         on_error: on_error
       )
 
       build_style(
-        intrinsic_width: intrinsic_w,
-        intrinsic_height: intrinsic_h,
+        intrinsic_width: features[:source_width],
+        intrinsic_height: features[:source_height],
         features: features,
         **opts
       )
-    end
-
-    def self.handle_image_bytes(image_bytes, content_type:, opts:, on_error:)
-      bytes = image_bytes.respond_to?(:read) ? image_bytes.read : image_bytes
-      bytes = bytes.to_s
-
-      if content_type.to_s.include?("svg")
-        svg_string = bytes.dup.force_encoding("UTF-8")
-        return handle_svg(svg_string, opts: opts, on_error: on_error)
-      end
-
-      file = nil
-      ext = file_extension_for(content_type)
-      file = Tempfile.new(["logosoup", ext])
-      file.binmode
-      file.write(bytes)
-      file.flush
-      file.close
-
-      handle_image_path(file.path, opts: opts, on_error: on_error)
-    ensure
-      file.unlink if file
     end
 
     def self.handle_error(error, opts:, on_error:)
@@ -105,59 +109,39 @@ module LogoSoup
       end
     end
 
-    def self.wants_visual_center?(align_by)
-      mode = align_by.to_s.strip
-      %w[visual-center visual-center-x visual-center-y].include?(mode)
-    end
-
     def self.measure_svg_features(svg_string, intrinsic_width:, intrinsic_height:, opts:, on_error:)
       return empty_features if intrinsic_width.to_f <= 0 || intrinsic_height.to_f <= 0
 
-      file = Tempfile.new(["logosoup", ".svg"])
-      file.binmode
-      file.write(svg_string.to_s)
-      file.flush
-      file.close
-
-      rendered = Vips::Image.new_from_file(file.path, access: :sequential)
-      rendered_w = rendered.width.to_f
-      rendered_h = rendered.height.to_f
-      return empty_features if rendered_w <= 0 || rendered_h <= 0
-
+      buffer = svg_string.to_s
       measured = Core::FeatureMeasurer.call(
-        path: file.path,
+        buffer: buffer,
         contrast_threshold: opts.fetch(:contrast_threshold).to_i,
         pixel_budget: opts.fetch(:pixel_budget).to_i,
         on_error: on_error
       )
 
+      rendered_w = measured[:source_width].to_f
+      rendered_h = measured[:source_height].to_f
+      return empty_features if rendered_w <= 0 || rendered_h <= 0
+
       scale_x = intrinsic_width.to_f / rendered_w
       scale_y = intrinsic_height.to_f / rendered_h
 
+      scales = {
+        content_box_width: scale_x,
+        content_box_height: scale_y,
+        visual_center_offset_x: scale_x,
+        visual_center_offset_y: scale_y
+      }
       scaled = measured.dup
-      scaled[:content_box_width] = scaled[:content_box_width].to_f * scale_x if scaled[:content_box_width].is_a?(Numeric)
-      scaled[:content_box_height] = scaled[:content_box_height].to_f * scale_y if scaled[:content_box_height].is_a?(Numeric)
-      scaled[:visual_center_offset_x] = scaled[:visual_center_offset_x].to_f * scale_x if scaled[:visual_center_offset_x].is_a?(Numeric)
-      scaled[:visual_center_offset_y] = scaled[:visual_center_offset_y].to_f * scale_y if scaled[:visual_center_offset_y].is_a?(Numeric)
+      scales.each do |key, scale|
+        scaled[key] = scaled[key].to_f * scale if scaled[key].is_a?(Numeric)
+      end
       scaled
     rescue StandardError => e
       raise e if on_error == :raise
 
       empty_features
-    ensure
-      file.unlink if file
-    end
-
-    def self.file_extension_for(content_type)
-      case content_type.to_s
-      when "image/png" then ".png"
-      when "image/jpeg", "image/jpg" then ".jpg"
-      when "image/webp" then ".webp"
-      when "image/gif" then ".gif"
-      when "image/tiff" then ".tif"
-      else
-        ".img"
-      end
     end
 
     def self.build_style(
@@ -222,15 +206,16 @@ module LogoSoup
       }
     end
 
-    private_class_method :build_style,
+    private_class_method :analyze_raster,
+                         :build_style,
+                         :coerce_to_utf8,
                          :fallback_style,
                          :empty_features,
-                         :file_extension_for,
                          :handle_error,
                          :handle_svg,
                          :handle_image_path,
                          :handle_image_bytes,
                          :measure_svg_features,
-                         :wants_visual_center?
+                         :warn_unknown_options
   end
 end

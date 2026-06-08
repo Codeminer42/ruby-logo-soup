@@ -15,9 +15,9 @@ require_relative "logosoup/core/feature_measurer"
 require_relative "logosoup/style"
 
 module LogoSoup
-	class Error < StandardError; end
+  class Error < StandardError; end
 
-	def self.style(**kwargs)
-		Style.call(**kwargs)
-	end
+  def self.style(**kwargs)
+    Style.call(**kwargs)
+  end
 end

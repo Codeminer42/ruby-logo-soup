@@ -39,7 +39,7 @@ module LogoSoup
         return nil if value.nil?
 
         num = value.to_s.strip[/[-+]?\d*\.?\d+/, 0]
-        return nil if num.blank?
+        return nil if num.nil? || num.empty?
 
         Float(num)
       rescue ArgumentError, RangeError => e

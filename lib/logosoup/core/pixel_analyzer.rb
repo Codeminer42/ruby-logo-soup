@@ -38,10 +38,10 @@ module LogoSoup
         pixel_count = sw * sh
         pixel_count.times do |i|
           base = i * 4
-          r = bytes[base]
-          g = bytes[base + 1]
-          b = bytes[base + 2]
-          a = bytes[base + 3]
+          r = bytes.getbyte(base)
+          g = bytes.getbyte(base + 1)
+          b = bytes.getbyte(base + 2)
+          a = bytes.getbyte(base + 3)
           next if a.nil? || a <= contrast_threshold
 
           if alpha_only
@@ -59,7 +59,7 @@ module LogoSoup
           end
 
           x = i % sw
-          y = (i - x) / sw
+          y = i / sw
 
           min_x = x if x < min_x
           max_x = x if x > max_x
@@ -88,10 +88,10 @@ module LogoSoup
 
         cb_x = (min_x * scale_x).floor
         cb_y = (min_y * scale_y).floor
-        cb_right = [[((max_x + 1) * scale_x).ceil.to_i, w].min, 0].max
-        cb_bottom = [[((max_y + 1) * scale_y).ceil.to_i, h].min, 0].max
-        content_box_width = [[cb_right - cb_x, 1].max, w].min
-        content_box_height = [[cb_bottom - cb_y, 1].max, h].min
+        cb_right = ((max_x + 1) * scale_x).ceil.to_i.clamp(0, w)
+        cb_bottom = ((max_y + 1) * scale_y).ceil.to_i.clamp(0, h)
+        content_box_width = (cb_right - cb_x).clamp(1, w)
+        content_box_height = (cb_bottom - cb_y).clamp(1, h)
 
         if total_weight <= 0
           offset_x = 0.0

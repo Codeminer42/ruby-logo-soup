@@ -30,8 +30,7 @@ module LogoSoup
         if df.positive? && pixel_density
           density_ratio = pixel_density.to_f / REFERENCE_DENSITY
           if density_ratio.positive?
-            density_scale = (1.0 / density_ratio)**(df * 0.5)
-            clamped_scale = [[density_scale, MAX_DENSITY_SCALE].min, MIN_DENSITY_SCALE].max
+            clamped_scale = ((1.0 / density_ratio)**(df * 0.5)).clamp(MIN_DENSITY_SCALE, MAX_DENSITY_SCALE)
             normalized_width *= clamped_scale
             normalized_height *= clamped_scale
           end
